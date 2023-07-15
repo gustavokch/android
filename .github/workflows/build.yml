@@ -10,7 +10,20 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions: write-all
+    container: 
+      image: ubuntu/ubuntu:latest
+      credentials:
+        username: gustavokch
+        password: dckr_pat_HzZm-FaY8cD_h88RZoEfhWTyC9A
     steps:
+    - name: Install Docker binary
+      run: |
+        apt-get -y update
+        apt-get -y install docker.io
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Reset ccache statistics
+      run: ccache -M 0 -F 0
     - name: Setup env
       env: 
         PATH: "$HOME/platform-tools:$PATH"
@@ -40,10 +53,6 @@ jobs:
         source build/envsetup.sh
         apply-waydroid-patches
         lunch lineage_waydroid_x86_64-userdebug
-    - name: Set up QEMU
-      uses: docker/setup-qemu-action@v2
-    - name: Reset ccache statistics
-      run: ccache -M 0 -F 0
     - name: Build package
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
