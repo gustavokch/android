@@ -1,0 +1,65 @@
+# This is a basic woon:
+  push:
+    branches: 
+      - 'lineage-20.0'
+         
+env:
+  CCACHE_DIR: $RUNNER_TEMP/ccache
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    permissions: write-all
+    steps:
+    - name: Setup env
+      env: PATH="$HOME/platform-tools:$PATH"
+      run: |
+        apt-get -y update
+        apt-get -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
+        lib32ncurses5-dev lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5 libncurses5-dev \
+        libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync \
+        schedtool squashfs-tools xsltproc python3 \
+        zip zlib1g-dev wget
+        wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+        unzip platform-tools-latest-linux.zip -d
+        mkdir -p ~/bin
+        mkdir -p ~/android/lineage
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
+        chmod a+x ~/bin/repo
+        export PATH="$HOME/bin:$PATH"
+        git config --global user.email "ghlsem@gmail.com"
+        git config --global user.name "Gustavo Mendes"
+        cd ~/android/lineage
+        repo init -u https://github.com/gustavokch/android.git -b lineage-20.0 --git-lfs
+        repo sync build/make
+        wget -O - https://raw.githubusercontent.com/waydroid/android_vendor_waydroid/lineage-20/manifest_scripts/generate-manifest.sh | bash
+        repo sync
+        ./build/envsetup.sh
+        source build/envsetup.sh
+        apply-waydroid-patches
+        lunch lineage_waydroid_x86_64-userdebug
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Reset ccache statistics
+      run: ccache -M 0 -F 0
+    - name: Build package
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        USE_CCACHE: 1
+        CCACHE_DIR: $RUNNER_TEMP/ccache
+      run: |
+        ccache -M 50G
+        ccache -O compression=true
+        git config --global --add safe.directory "/__w/android/android"
+        git config --global --add safe.directory "/__w/android/lineage-20.0"        
+
+        find / -type f -name "*.img" > deb
+        export DEB=$(cat deb)
+        gh release create --title $RELEASE_TITLE --generate-notes -R https://github.com/gustavokch/android lineage-20.0-waydroid $DEB
+        
+    - uses: actions/upload-artifact@v3
+      name: Upload Artifact
+      with:
+        name: .deb files
+        path: ./*.deb
+  
