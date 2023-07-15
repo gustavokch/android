@@ -1,0 +1,77 @@
+on:
+  push:
+    branches: 
+      - 'lineage-20.0'
+         
+env:
+  CCACHE_DIR: $RUNNER_TEMP/ccache
+
+jobs:
+  build:
+    runs-on: self-hosted
+    permissions: write-all
+    container: 
+      image: arm64v8/ubuntu:latest
+      credentials:
+        username: gustavokch
+        password: dckr_pat_HzZm-FaY8cD_h88RZoEfhWTyC9A
+    steps:
+    - name: Install Docker binary
+      run: |
+        apt-get -y update
+        apt-get -y install docker.io
+    - name: Set up QEMU
+      uses: docker/setup-qemu-action@v2
+    - name: Setup env
+      run: |
+        apt update -y
+        apt install ccache bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
+        lib32ncurses5-dev lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5 libncurses5-dev \
+        libsdl1.2-dev libssl-dev libxml2 libxml2-utils lzop pngcrush rsync \
+        schedtool squashfs-tools xsltproc python3 \
+        zip zlib1g-dev wget -y
+        ccache -M 0 -F 0
+        wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
+        unzip platform-tools-latest-linux.zip -d ~
+        export PATH="$(pwd)/platform-tools:$(pwd)/bin:$PATH"
+        mkdir -p ./bin~
+        mkdir -p ./android/lineage
+        curl https://storage.googleapis.com/git-repo-downloads/repo > ./bin/repo
+        chmod a+x ./bin/repo
+        export PATH="$(pwd)/bin:$PATH"
+        ln -s -T /usr/bin/python3 /usr/bin/python
+        git config --global user.email "ghlsem@gmail.com"
+        git config --global user.name "Gustavo Mendes"
+        cd ./android/lineage
+        repo init -u https://github.com/gustavokch/android.git -b lineage-20.0 --git-lfs
+        repo sync
+        wget -O - https://raw.githubusercontent.com/waydroid/android_vendor_waydroid/lineage-20/manifest_scripts/generate-manifest.sh | bash
+        . build/envsetup.sh
+
+    - name: Build package
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}    
+        USE_CCACHE: 1
+        CCACHE_DIR: $RUNNER_TEMP/ccache
+      run: |
+        ccache -M 50G
+        ccache -O compression=true
+        git config --global --add safe.directory "/__w/android/android"
+        git config --global --add safe.directory "/github/home/android/android"
+        git config --global --add safe.directory "/github/home/android/lineage-20.0"
+        git config --global --add safe.directory "/__w/android/lineage-20.0"        
+        source build/envsetup.sh
+        apply-waydroid-patches
+        lunch lineage_waydroid_x86_64-userdebug
+        make systemimage -j$(nproc --all)
+        make vendorimage -j$(nproc --all)
+        find / -type f -name "*.img" > deb
+        export DEB=$(cat deb)
+        gh release create --title $RELEASE_TITLE --generate-notes -R https://github.com/gustavokch/android lineage-20.0-waydroid $DEB
+        
+    - uses: actions/upload-artifact@v3
+      name: Upload Artifact
+      with:
+        name: .deb files
+        path: ./*.deb
+  
