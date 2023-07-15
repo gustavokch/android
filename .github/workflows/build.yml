@@ -23,8 +23,6 @@ jobs:
     - name: Set up QEMU
       uses: docker/setup-qemu-action@v2
     - name: Setup env
-      env: 
-        PATH: "$HOME/platform-tools:$PATH"
       run: |
         sudo apt update -y
         sudo apt install ccache bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
@@ -35,6 +33,7 @@ jobs:
         ccache -M 0 -F 0
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
         unzip platform-tools-latest-linux.zip -d
+        export PATH="$HOME/platform-tools:$PATH"
         mkdir -p ~/bin
         mkdir -p ~/android/lineage
         curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
