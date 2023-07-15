@@ -1,4 +1,4 @@
-# This is a basic woon:
+on:
   push:
     branches: 
       - 'lineage-20.0'
@@ -12,7 +12,8 @@ jobs:
     permissions: write-all
     steps:
     - name: Setup env
-      env: PATH="$HOME/platform-tools:$PATH"
+      env: 
+        PATH: "$HOME/platform-tools:$PATH"
       run: |
         apt-get -y update
         apt-get -y install bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
