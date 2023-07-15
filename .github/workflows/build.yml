@@ -39,6 +39,7 @@ jobs:
         curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
         chmod a+x ~/bin/repo
         export PATH="$HOME/bin:$PATH"
+        ln -s -T /usr/bin/python3 /usr/bin/python
         git config --global user.email "ghlsem@gmail.com"
         git config --global user.name "Gustavo Mendes"
         cd ~/android/lineage
