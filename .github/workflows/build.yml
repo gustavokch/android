@@ -32,7 +32,7 @@ jobs:
         zip zlib1g-dev wget -y
         ccache -M 0 -F 0
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
-        unzip platform-tools-latest-linux.zip -d
+        unzip platform-tools-latest-linux.zip -d ~
         export PATH="$HOME/platform-tools:$PATH"
         mkdir -p ~/bin
         mkdir -p ~/android/lineage
