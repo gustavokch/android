@@ -11,7 +11,7 @@ jobs:
     runs-on: self-hosted
     permissions: write-all
     container: 
-      image: arm64v8/ubuntu:latest
+      image: ubuntu:latest
       credentials:
         username: gustavokch
         password: dckr_pat_HzZm-FaY8cD_h88RZoEfhWTyC9A
@@ -24,6 +24,7 @@ jobs:
       uses: docker/setup-qemu-action@v2
     - name: Setup env
       run: |
+        docker run --rm -ti --platform linux/amd64 ubuntu:latest bash
         apt update -y
         apt install ccache bc bison build-essential ccache curl flex g++-multilib gcc-multilib git git-lfs gnupg gperf imagemagick \
         lib32ncurses5-dev lib32readline-dev lib32z1-dev libelf-dev liblz4-tool libncurses5 libncurses5-dev \
