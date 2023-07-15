@@ -33,7 +33,7 @@ jobs:
         ccache -M 0 -F 0
         wget https://dl.google.com/android/repository/platform-tools-latest-linux.zip
         unzip platform-tools-latest-linux.zip -d ~
-        export PATH="$HOME/platform-tools:$PATH"
+        export PATH="$(pwd)/platform-tools:$(pwd)/bin:$PATH"
         mkdir -p ~/bin
         mkdir -p ~/android/lineage
         curl https://storage.googleapis.com/git-repo-downloads/repo > ~/bin/repo
@@ -58,6 +58,8 @@ jobs:
         ccache -M 50G
         ccache -O compression=true
         git config --global --add safe.directory "/__w/android/android"
+        git config --global --add safe.directory "/github/home/android/android"
+        git config --global --add safe.directory "/github/home/android/lineage-20.0"
         git config --global --add safe.directory "/__w/android/lineage-20.0"        
         source build/envsetup.sh
         apply-waydroid-patches
